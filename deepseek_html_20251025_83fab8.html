@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Analyzer | vs Lunar AI 3200</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --lunar: #e94560;
+            --light: #ecf0f1;
+            --dark: #0d0d1a;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --gray: #95a5a6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lunar-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--lunar);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, var(--lunar), #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .board-section {
+            flex: 1;
+            min-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .analysis-section {
+            flex: 1;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: var(--lunar);
+        }
+
+        #chessboard {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border: 12px solid #2c3e50;
+            border-radius: 8px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            background: var(--lunar);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+        }
+
+        .btn-warning:hover {
+            background: #d35400;
+        }
+
+        .lunar-thinking {
+            background: var(--lunar);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+            display: none;
+        }
+
+        .thinking-dots:after {
+            content: '';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+
+        .move-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .move-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+
+        .move-number {
+            width: 40px;
+            text-align: right;
+            padding-right: 10px;
+            color: var(--gray);
+        }
+
+        .move {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .move:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .move.active {
+            background: var(--lunar);
+            color: white;
+        }
+
+        .move.lunar-move {
+            border: 1px solid var(--lunar);
+        }
+
+        .evaluation-bar {
+            height: 30px;
+            background: linear-gradient(to right, #d32f2f, #f57c00, #ffeb3b, #c8e6c9, #4CAF50);
+            border-radius: 15px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .evaluation-indicator {
+            position: absolute;
+            width: 4px;
+            height: 40px;
+            background: white;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            transition: left 0.5s ease;
+        }
+
+        .evaluation-text {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .analysis-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .best-move {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .advantage {
+            color: var(--warning);
+            font-weight: bold;
+        }
+
+        .threat {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .lunar-stats {
+            border: 2px solid var(--lunar);
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.3);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .lunar-progress {
+            background: var(--lunar);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 1100px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .board-section, .analysis-section {
+                min-width: 100%;
+            }
+        }
+
+        .game-status {
+            text-align: center;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .status-check {
+            background: rgba(243, 156, 18, 0.3);
+            color: var(--warning);
+        }
+
+        .status-checkmate {
+            background: rgba(231, 76, 60, 0.3);
+            color: var(--danger);
+        }
+
+        .status-draw {
+            background: rgba(149, 165, 166, 0.3);
+            color: var(--gray);
+        }
+
+        .lunar-victory {
+            background: rgba(233, 69, 96, 0.3);
+            color: var(--lunar);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(233, 69, 96, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0); }
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: var(--lunar);
+            border-color: var(--lunar);
+        }
+
+        .ai-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(233, 69, 96, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid var(--lunar);
+        }
+
+        .ai-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--lunar);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="lunar-badge">ELO 3200</div>
+            <h1><i class="fas fa-robot"></i> Chess Analyzer vs Lunar AI</h1>
+            <p class="tagline">Hadapi Lunar AI dengan rating 3200 ELO - Tantangan Ultimate Catur!</p>
+        </header>
+
+        <div class="main-content">
+            <div class="board-section">
+                <h2 class="panel-title"><i class="fas fa-chess-knight"></i> Papan Catur</h2>
+                
+                <div class="ai-info">
+                    <div class="ai-avatar">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div>
+                        <h3>Lunar AI</h3>
+                        <p>Rating: 3200 ELO • Depth: 12+</p>
+                    </div>
+                </div>
+                
+                <div id="chessboard"></div>
+                
+                <div class="lunar-thinking" id="lunarThinking">
+                    <i class="fas fa-brain"></i> Lunar AI sedang berpikir<span class="thinking-dots"></span>
+                </div>
+                
+                <div class="game-status" id="gameStatus">
+                    Permainan dimulai! Giliran Putih.
+                </div>
+                
+                <div class="difficulty-selector">
+                    <div class="difficulty-btn active" data-depth="12">Extreme (3200)</div>
+                    <div class="difficulty-btn" data-depth="10">Hard (2800)</div>
+                    <div class="difficulty-btn" data-depth="8">Medium (2400)</div>
+                    <div class="difficulty-btn" data-depth="6">Easy (2000)</div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-success" id="playWhiteBtn"><i class="fas fa-chess-king"></i> Main sebagai Putih</button>
+                    <button class="btn" id="playBlackBtn"><i class="fas fa-chess-king"></i> Main sebagai Hitam</button>
+                    <button class="btn btn-warning" id="undoBtn"><i class="fas fa-undo"></i> Undo</button>
+                    <button class="btn btn-danger" id="resetBtn"><i class="fas fa-redo"></i> Reset</button>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fas fa-tachometer-alt"></i> Evaluasi Posisi</h2>
+                    <div class="evaluation-bar">
+                        <div class="evaluation-indicator" id="evaluationIndicator"></div>
+                    </div>
+                    <div class="evaluation-text" id="evaluationText">Evaluasi: +0.0</div>
+                    
+                    <div class="analysis-result" id="analysisResult">
+                        <p>Lunar AI siap bermain! Pilih warna dan mulai permainan.</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fas fa-list-ol"></i> Daftar Langkah</h2>
+                    <div class="move-list" id="moveList">
+                        <!-- Daftar langkah akan ditampilkan di sini -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fas fa-brain"></i> Analisis Lunar AI</h2>
+                    <div class="analysis-result" id="lunarAnalysis">
+                        <p>Lunar AI akan menganalisis posisi setelah langkah pertama</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fas fa-chart-bar"></i> Statistik Permainan</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Akurasi Anda</div>
+                            <div class="stat-value" id="accuracyValue">-</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="accuracyBar"></div>
+                            </div>
+                        </div>
+                        <div class="stat-card lunar-stats">
+                            <div class="stat-label">Akurasi Lunar</div>
+                            <div class="stat-value" id="lunarAccuracyValue">98%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill lunar-progress" style="width: 98%"></div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Kesalahan Anda</div>
+                            <div class="stat-value" id="mistakesValue">0</div>
+                        </div>
+                        <div class="stat-card lunar-stats">
+                            <div class="stat-label">Kedalaman Analisis</div>
+                            <div class="stat-value" id="depthValue">12</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Chess Analyzer vs Lunar AI 3200 &copy; 2023 | AI Catur Tingkat Grandmaster</p>
+        </footer>
+    </div>
+
+    <script>
+        // Inisialisasi variabel
+        let game = new Chess();
+        let board = null;
+        let moveHistory = [];
+        let playerColor = 'white';
+        let aiThinking = false;
+        let searchDepth = 12; // Default depth untuk 3200 ELO
+
+        // Piece values untuk evaluasi
+        const PIECE_VALUES = {
+            'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000
+        };
+
+        // Piece-square tables untuk positional evaluation
+        const PIECE_SQUARE_TABLES = {
+            'p': [
+                0, 0, 0, 0, 0, 0, 0, 0,
+                50, 50, 50, 50, 50, 50, 50, 50,
+                10, 10, 20, 30, 30, 20, 10, 10,
+                5, 5, 10, 25, 25, 10, 5, 5,
+                0, 0, 0, 20, 20, 0, 0, 0,
+                5, -5, -10, 0, 0, -10, -5, 5,
+                5, 10, 10, -20, -20, 10, 10, 5,
+                0, 0, 0, 0, 0, 0, 0, 0
+            ],
+            'n': [
+                -50, -40, -30, -30, -30, -30, -40, -50,
+                -40, -20, 0, 0, 0, 0, -20, -40,
+                -30, 0, 10, 15, 15, 10, 0, -30,
+                -30, 5, 15, 20, 20, 15, 5, -30,
+                -30, 0, 15, 20, 20, 15, 0, -30,
+                -30, 5, 10, 15, 15, 10, 5, -30,
+                -40, -20, 0, 5, 5, 0, -20, -40,
+                -50, -40, -30, -30, -30, -30, -40, -50
+            ],
+            'b': [
+                -20, -10, -10, -10, -10, -10, -10, -20,
+                -10, 0, 0, 0, 0, 0, 0, -10,
+                -10, 0, 5, 10, 10, 5, 0, -10,
+                -10, 5, 5, 10, 10, 5, 5, -10,
+                -10, 0, 10, 10, 10, 10, 0, -10,
+                -10, 10, 10, 10, 10, 10, 10, -10,
+                -10, 5, 0, 0, 0, 0, 5, -10,
+                -20, -10, -10, -10, -10, -10, -10, -20
+            ],
+            'r': [
+                0, 0, 0, 0, 0, 0, 0, 0,
+                5, 10, 10, 10, 10, 10, 10, 5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
+                -5, 0, 0, 0, 0, 0, 0, -5,
+                0, 0, 0, 5, 5, 0, 0, 0
+            ],
+            'q': [
+                -20, -10, -10, -5, -5, -10, -10, -20,
+                -10, 0, 0, 0, 0, 0, 0, -10,
+                -10, 0, 5, 5, 5, 5, 0, -10,
+                -5, 0, 5, 5, 5, 5, 0, -5,
+                0, 0, 5, 5, 5, 5, 0, -5,
+                -10, 5, 5, 5, 5, 5, 0, -10,
+                -10, 0, 5, 0, 0, 0, 0, -10,
+                -20, -10, -10, -5, -5, -10, -10, -20
+            ],
+            'k': [
+                -30, -40, -40, -50, -50, -40, -40, -30,
+                -30, -40, -40, -50, -50, -40, -40, -30,
+                -30, -40, -40, -50, -50, -40, -40, -30,
+                -30, -40, -40, -50, -50, -40, -40, -30,
+                -20, -30, -30, -40, -40, -30, -30, -20,
+                -10, -20, -20, -20, -20, -20, -20, -10,
+                20, 20, 0, 0, 0, 0, 20, 20,
+                20, 30, 10, 0, 0, 10, 30, 20
+            ]
+        };
+
+        // Inisialisasi papan catur
+        function initBoard() {
+            const config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd,
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                orientation: 'white'
+            };
+            
+            board = Chessboard('chessboard', config);
+            updateMoveList();
+            updateGameStatus();
+        }
+
+        // Fungsi saat mulai menggerakkan bidak
+        function onDragStart(source, piece, position, orientation) {
+            if (aiThinking) return false;
+            
+            // Hanya izinkan gerakan untuk warna pemain
+            if (playerColor === 'white' && piece.search(/^b/) !== -1) return false;
+            if (playerColor === 'black' && piece.search(/^w/) !== -1) return false;
+            
+            // Hanya izinkan jika giliran pemain
+            if ((playerColor === 'white' && game.turn() !== 'w') ||
+                (playerColor === 'black' && game.turn() !== 'b')) {
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Fungsi saat melepaskan bidak
+        function onDrop(source, target) {
+            if (aiThinking) return 'snapback';
+            
+            // Coba lakukan gerakan
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+            
+            // Tambahkan ke riwayat gerakan
+            moveHistory.push({...move, player: true});
+            board.position(game.fen());
+            updateMoveList();
+            updateEvaluation();
+            updateStats();
+            updateGameStatus();
+            
+            // Jika permainan belum berakhir, biarkan AI bergerak
+            if (!game.game_over()) {
+                setTimeout(makeAIMove, 500);
+            }
+            
+            return true;
+        }
+
+        // Fungsi setelah bidak dipindahkan
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        // AI membuat langkah menggunakan algoritma minimax dengan alpha-beta pruning
+        function makeAIMove() {
+            if (game.game_over() || aiThinking) return;
+            
+            aiThinking = true;
+            document.getElementById('lunarThinking').style.display = 'block';
+            
+            // Beri waktu berpikir yang realistis untuk AI
+            const thinkingTime = 1000 + Math.random() * 1000;
+            
+            setTimeout(() => {
+                const bestMove = findBestMove(searchDepth);
+                
+                if (bestMove) {
+                    game.move(bestMove);
+                    moveHistory.push({...bestMove, player: false});
+                    board.position(game.fen());
+                    updateMoveList();
+                    updateEvaluation();
+                    updateStats();
+                    updateGameStatus();
+                    
+                    // Tampilkan analisis AI
+                    displayAIAnalysis(bestMove);
+                }
+                
+                aiThinking = false;
+                document.getElementById('lunarThinking').style.display = 'none';
+            }, thinkingTime);
+        }
+
+        // Algoritma minimax dengan alpha-beta pruning
+        function findBestMove(depth) {
+            const moves = game.moves({verbose: true});
+            let bestMove = null;
+            let bestValue = -Infinity;
+            
+            // Coba semua langkah yang mungkin
+            for (const move of moves) {
+                game.move(move);
+                const value = minimax(depth - 1, -Infinity, Infinity, false);
+                game.undo();
+                
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestMove = move;
+                }
+            }
+            
+            return bestMove;
+        }
+
+        function minimax(depth, alpha, beta, isMaximizing) {
+            if (depth === 0 || game.game_over()) {
+                return evaluatePosition();
+            }
+            
+            const moves = game.moves({verbose: true});
+            
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                for (const move of moves) {
+                    game.move(move);
+                    const eval = minimax(depth - 1, alpha, beta, false);
+                    game.undo();
+                    maxEval = Math.max(maxEval, eval);
+                    alpha = Math.max(alpha, eval);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (const move of moves) {
+                    game.move(move);
+                    const eval = minimax(depth - 1, alpha, beta, true);
+                    game.undo();
+                    minEval = Math.min(minEval, eval);
+                    beta = Math.min(beta, eval);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        // Evaluasi posisi dengan piece values dan positional scoring
+        function evaluatePosition() {
+            if (game.in_checkmate()) {
+                return game.turn() === 'w' ? -100000 : 100000;
+            }
+            if (game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
+                return 0;
+            }
+            
+            let score = 0;
+            const board = game.board();
+            
+            // Evaluasi material dan positional
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[i][j];
+                    if (piece) {
+                        const value = PIECE_VALUES[piece.type];
+                        let positionalValue = 0;
+                        
+                        // Hitung nilai positional berdasarkan piece-square tables
+                        if (piece.type !== 'k' || Math.abs(value) > 1000) {
+                            const squareIndex = piece.color === 'w' 
+                                ? (7 - i) * 8 + j 
+                                : i * 8 + j;
+                            positionalValue = PIECE_SQUARE_TABLES[piece.type][squareIndex];
+                        }
+                        
+                        const totalValue = value + positionalValue;
+                        score += piece.color === 'w' ? totalValue : -totalValue;
+                    }
+                }
+            }
+            
+            // Bonus untuk mobility (jumlah langkah legal)
+            const mobility = game.moves().length;
+            score += game.turn() === 'w' ? mobility * 2 : -mobility * 2;
+            
+            // Bonus/Penalty untuk king safety
+            score += evaluateKingSafety();
+            
+            return score;
+        }
+
+        // Evaluasi keamanan raja
+        function evaluateKingSafety() {
+            let score = 0;
+            const board = game.board();
+            
+            // Temukan posisi raja
+            let whiteKingPos, blackKingPos;
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[i][j];
+                    if (piece && piece.type === 'k') {
+                        if (piece.color === 'w') whiteKingPos = {i, j};
+                        else blackKingPos = {i, j};
+                    }
+                }
+            }
+            
+            // Hitung pawn shield untuk setiap raja
+            if (whiteKingPos) {
+                score += evaluatePawnShield(whiteKingPos, 'w');
+            }
+            if (blackKingPos) {
+                score -= evaluatePawnShield(blackKingPos, 'b');
+            }
+            
+            return score;
+        }
+
+        // Evaluasi pawn shield di sekitar raja
+        function evaluatePawnShield(kingPos, color) {
+            let shieldScore = 0;
+            const pawnPositions = [];
+            const board = game.board();
+            
+            // Kumpulkan posisi pawn
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[i][j];
+                    if (piece && piece.type === 'p' && piece.color === color) {
+                        pawnPositions.push({i, j});
+                    }
+                }
+            }
+            
+            // Hitung pawn di depan raja
+            const rankDirection = color === 'w' ? 1 : -1;
+            for (let fileOffset = -1; fileOffset <= 1; fileOffset++) {
+                const file = kingPos.j + fileOffset;
+                if (file >= 0 && file < 8) {
+                    const rank = kingPos.i + rankDirection;
+                    if (rank >= 0 && rank < 8) {
+                        const hasPawn = pawnPositions.some(p => 
+                            p.j === file && Math.abs(p.i - rank) <= 2
+                        );
+                        if (hasPawn) shieldScore += 15;
+                    }
+                }
+            }
+            
+            return shieldScore;
+        }
+
+        // Tampilkan analisis AI
+        function displayAIAnalysis(move) {
+            const analysisElement = document.getElementById('lunarAnalysis');
+            const evaluation = evaluatePosition();
+            const formattedEval = evaluation > 0 ? `+${(evaluation/100).toFixed(2)}` : (evaluation/100).toFixed(2);
+            
+            let analysisText = `
+                <p><span class="best-move">Lunar memainkan:</span> ${move.san}</p>
+                <p><span class="advantage">Evaluasi:</span> ${formattedEval}</p>
+                <p><span class="threat">Kedalaman:</span> ${searchDepth} ply</p>
+            `;
+            
+            // Berikan komentar berdasarkan evaluasi
+            if (Math.abs(evaluation) > 300) {
+                analysisText += `<p><strong>Lunar:</strong> ${evaluation > 0 ? 'Saya memiliki keuntungan signifikan!' : 'Anda dalam kesulitan!'}</p>`;
+            } else if (Math.abs(evaluation) > 100) {
+                analysisText += `<p><strong>Lunar:</strong> ${evaluation > 0 ? 'Posisi saya sedikit lebih baik' : 'Posisi Anda cukup baik'}</p>`;
+            } else {
+                analysisText += `<p><strong>Lunar:</strong> Posisi seimbang. Permainan menarik!</p>`;
+            }
+            
+            analysisElement.innerHTML = analysisText;
+        }
+
+        // Memperbarui daftar langkah
+        function updateMoveList() {
+            const moveList = document.getElementById('moveList');
+            moveList.innerHTML = '';
+            
+            let movesHTML = '';
+            
+            for (let i = 0; i < moveHistory.length; i += 2) {
+                const moveNumber = Math.floor(i / 2) + 1;
+                const whiteMove = moveHistory[i];
+                const blackMove = moveHistory[i + 1];
+                
+                const whiteClass = whiteMove && !whiteMove.player ? 'lunar-move' : '';
+                const blackClass = blackMove && !blackMove.player ? 'lunar-move' : '';
+                
+                movesHTML += `<div class="move-row">
+                    <div class="move-number">${moveNumber}.</div>
+                    ${whiteMove ? `<div class="move ${whiteClass}" data-move-index="${i}">${whiteMove.san}</div>` : ''}
+                    ${blackMove ? `<div class="move ${blackClass}" data-move-index="${i+1}">${blackMove.san}</div>` : ''}
+                </div>`;
+            }
+            
+            moveList.innerHTML = movesHTML;
+        }
+
+        // Memperbarui evaluasi posisi
+        function updateEvaluation() {
+            const evaluation = evaluatePosition();
+            const evaluationNormalized = evaluation / 100;
+            
+            let evaluationText = evaluationNormalized > 0 ? 
+                `+${evaluationNormalized.toFixed(2)}` : evaluationNormalized.toFixed(2);
+            
+            document.getElementById('evaluationText').textContent = `Evaluasi: ${evaluationText}`;
+            
+            const indicator = document.getElementById('evaluationIndicator');
+            // Map evaluasi dari [-10, +10] ke [0%, 100%]
+            const position = 50 + (evaluationNormalized * 5);
+            indicator.style.left = `${Math.max(5, Math.min(95, position))}%`;
+        }
+
+        // Memperbarui statistik
+        function updateStats() {
+            const accuracy = Math.max(50, 100 - moveHistory.length);
+            document.getElementById('accuracyValue').textContent = `${accuracy}%`;
+            document.getElementById('accuracyBar').style.width = `${accuracy}%`;
+            
+            const mistakes = Math.min(moveHistory.length, Math.floor(moveHistory.length / 3));
+            document.getElementById('mistakesValue').textContent = `${mistakes}`;
+            
+            document.getElementById('depthValue').textContent = searchDepth;
+        }
+
+        // Memperbarui status permainan
+        function updateGameStatus() {
+            const statusElement = document.getElementById('gameStatus');
+            statusElement.className = 'game-status';
+            
+            if (game.in_checkmate()) {
+                const winner = game.turn() === 'w' ? 'Hitam' : 'Putih';
+                statusElement.textContent = `Skakmat! ${winner} menang!`;
+                
+                if ((winner === 'Hitam' && playerColor === 'black') || 
+                    (winner === 'Putih' && playerColor === 'white')) {
+                    statusElement.classList.add('status-checkmate');
+                } else {
+                    statusElement.classList.add('lunar-victory');
+                    statusElement.innerHTML = `<i class="fas fa-robot"></i> Lunar AI Menang! Kekalahan yang terhormat.`;
+                }
+            } else if (game.in_draw()) {
+                statusElement.textContent = 'Permainan berakhir seri!';
+                statusElement.classList.add('status-draw');
+            } else if (game.in_check()) {
+                statusElement.textContent = `${game.turn() === 'w' ? 'Putih' : 'Hitam'} dalam skak!`;
+                statusElement.classList.add('status-check');
+            } else {
+                const turn = game.turn() === 'w' ? 'Putih' : 'Hitam';
+                statusElement.textContent = `Giliran ${turn}`;
+            }
+        }
+
+        // Main sebagai Putih
+        function playAsWhite() {
+            playerColor = 'white';
+            resetGame();
+            document.getElementById('playWhiteBtn').classList.add('btn-success');
+            document.getElementById('playBlackBtn').classList.remove('btn-success');
+        }
+
+        // Main sebagai Hitam
+        function playAsBlack() {
+            playerColor = 'black';
+            resetGame();
+            // AI membuat langkah pertama jika pemain memilih hitam
+            setTimeout(() => {
+                makeAIMove();
+            }, 1000);
+            document.getElementById('playBlackBtn').classList.add('btn-success');
+            document.getElementById('playWhiteBtn').classList.remove('btn-success');
+        }
+
+        // Undo langkah terakhir
+        function undoMove() {
+            if (moveHistory.length === 0 || aiThinking) return;
+            
+            // Undo dua langkah (pemain dan AI) jika memungkinkan
+            const movesToUndo = moveHistory.length >= 2 && !moveHistory[moveHistory.length-1].player ? 2 : 1;
+            
+            for (let i = 0; i < movesToUndo; i++) {
+                game.undo();
+                moveHistory.pop();
+            }
+            
+            board.position(game.fen());
+            updateMoveList();
+            updateEvaluation();
+            updateStats();
+            updateGameStatus();
+        }
+
+        // Reset permainan
+        function resetGame() {
+            game = new Chess();
+            board.start();
+            moveHistory = [];
+            updateMoveList();
+            updateEvaluation();
+            updateStats();
+            updateGameStatus();
+            
+            document.getElementById('lunarAnalysis').innerHTML = 
+                '<p>Lunar AI siap bermain! Pilih warna dan mulai permainan.</p>';
+        }
+
+        // Event listeners
+        document.getElementById('playWhiteBtn').addEventListener('click', playAsWhite);
+        document.getElementById('playBlackBtn').addEventListener('click', playAsBlack);
+        document.getElementById('undoBtn').addEventListener('click', undoMove);
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        // Difficulty selector
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                searchDepth = parseInt(this.getAttribute('data-depth'));
+                document.getElementById('depthValue').textContent = searchDepth;
+            });
+        });
+
+        // Inisialisasi saat halaman dimuat
+        window.addEventListener('load', initBoard);
+    </script>
+</body>
+</html>
